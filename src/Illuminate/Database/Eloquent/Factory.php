@@ -44,15 +44,7 @@ class Factory implements ArrayAccess
     {
         $pathToFactories = $pathToFactories ?: database_path('factories');
 
-        $factory = new static($faker);
-
-        if (is_dir($pathToFactories)) {
-            foreach (Finder::create()->files()->in($pathToFactories) as $file) {
-                require $file->getRealPath();
-            }
-        }
-
-        return $factory;
+        return (new static($faker))->load($pathToFactories);
     }
 
     /**
@@ -107,6 +99,25 @@ class Factory implements ArrayAccess
     }
 
     /**
+     * Load factories from path.
+     *
+     * @param  string  $path
+     * @return $this
+     */
+    public function load($path)
+    {
+        $factory = $this;
+
+        if (is_dir($path)) {
+            foreach (Finder::create()->files()->in($path) as $file) {
+                require $file->getRealPath();
+            }
+        }
+
+        return $factory;
+    }
+
+    /**
      * Create an instance of the given model.
      *
      * @param  string  $class
@@ -154,7 +165,7 @@ class Factory implements ArrayAccess
      */
     public function raw($class, array $attributes = [], $name = 'default')
     {
-        $raw = call_user_func($this->definitions[$class][$name], $this->faker);
+        $raw = call_user_func($this->definitions[$class][$name], $this->faker, $attributes);
 
         return array_merge($raw, $attributes);
     }
